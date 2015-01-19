@@ -150,10 +150,10 @@ module Yourub
 
       def video_params(result_video_ids)
         fields = URI::encode(
-          "items(id,snippet/description,snippet/title,snippet/publishedAt,snippet/channelId,snippet/channelTitle,snippet/thumbnails,snippet/categoryId,recordingDetails/recordingDate,recordingDetails/location/latitude,recordingDetails/location/longitude)"
+          "items(id,snippet/description,snippet/title,snippet/publishedAt,snippet/channelId,snippet/channelTitle,snippet/thumbnails,snippet/categoryId,recordingDetails/recordingDate,recordingDetails/location/latitude,recordingDetails/location/longitude,contentDetails/duration)"
         )
         { :id => result_video_ids,
-          :part => "id,snippet,recordingDetails",
+          :part => "id,snippet,recordingDetails,contentDetails",
           :fields => fields }
       end
 
@@ -182,7 +182,6 @@ module Yourub
         v = Yourub::Reader.parse_videos(request)
         v ? Yourub::CountFilter.get_views_count(v.first) : nil
       end
-
     end
   end
 end

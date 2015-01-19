@@ -34,11 +34,10 @@ module Yourub
         return number_founded.send(operator, number_to_compare)
       end
 
-      def get_views_count video
-        return 0 if video['statistics'].nil?
-        return video['statistics']["viewCount"].to_i
+      def get_views_count(video)
+        return 0 if video[:views].nil?
+        return video[:views]
       end
-
     end
   end
 end
