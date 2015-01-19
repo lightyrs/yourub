@@ -12,7 +12,12 @@ module Yourub
 
       def confirm(criteria)
         valid_format?(criteria)
-        @criteria = symbolize_keys(criteria)
+
+        if criteria.is_a?(String)
+          return @criteria = criteria
+        else
+          @criteria = symbolize_keys(criteria)
+        end
 
         remove_empty_and_non_valid_params
         minimum_param_present?
@@ -133,8 +138,8 @@ module Yourub
 
       def valid_format?(criteria)
         raise ArgumentError.new(
-          "give an hash as search criteria"
-        ) unless( criteria.is_a? Hash )
+          "provide a hash or video id as search criteria"
+        ) unless( criteria.is_a?(Hash) || criteria.is_a?(String) )
       end
 
       def minimum_param_present?

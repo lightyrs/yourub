@@ -33,24 +33,21 @@ module Yourub
       def video_id(video)
         video['id']
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
       def channel_id(video)
         video['snippet']['channelId'] if video['snippet']
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
       def category_id(video)
         video['snippet']['categoryId'] if video['snippet']
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
@@ -61,16 +58,14 @@ module Yourub
           video['recording_details']['recordingDate']
         end
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
       def title(video)
         video['snippet']['title'] if video['snippet']
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
@@ -79,8 +74,7 @@ module Yourub
           video['snippet']['description'] || video['snippet']['title']
         end
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
@@ -92,16 +86,14 @@ module Yourub
           end
         end
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
       def video_url(video)
         "https://www.youtube.com/watch?v=#{video_id(video)}"
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
@@ -110,8 +102,7 @@ module Yourub
           ISO8601::Duration.new(video['contentDetails']['duration']).to_seconds
         end
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
@@ -119,8 +110,7 @@ module Yourub
         geo = video['recordingDetails']['location'] if video['recordingDetails']
         geo['latitude'].to_f if geo.present?
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
@@ -128,16 +118,14 @@ module Yourub
         geo = video['recordingDetails']['location'] if video['recordingDetails']
         geo['longitude'].to_f if geo.present?
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
 
       def view_count(video)
         video['statistics']['viewCount'].to_i if video['statistics']
       rescue => e
-        puts "#{__method__}"
-        puts "#{e.class}: #{e.message}"
+        Yourub.logger.error("Yourub::Reader.#{__method__}___#{e.class}: #{e.message}")
         nil
       end
     end

@@ -15,7 +15,8 @@ module Yourub
 
           @categories, @videos = [], []
           @count_filter = {}
-          @include_avatars = criteria.delete(:avatars)
+          @include_avatars = criteria.delete(:avatars) if criteria.is_a?(Hash) && criteria[:avatars]
+          @pages = criteria.is_a?(Hash) && criteria[:pages] ? criteria.delete(:pages) : 1
           @criteria = Yourub::Validator.confirm(criteria)
           search_by_criteria
         rescue ArgumentError => e
@@ -24,23 +25,24 @@ module Yourub
       end
 
       def search_by_criteria
-        if @criteria.has_key? :id
-          search_by_id
+        if @criteria.is_a?(String)
+          search_one(@criteria)
+        elsif @criteria.has_key? :id
+          search_one(@criteria[:id])
         else
-          merge_criteria_with_api_options
-          retrieve_categories
-          retrieve_videos
+          search_many
         end
       end
 
-      def search_by_id
-        params = {
-          :id => @criteria[:id],
-          :part => 'snippet,statistics',
-        }
-        video_response = videos_list_request(params)
-        entry = Yourub::Reader.parse_videos(video_response)
-        add_video_to_search_result(entry.first) unless entry.nil?
+      def search_one(video_id)
+        @include_avatars = true
+        get_details_and_store(extended_video_params(video_id))
+      end
+
+      def search_many
+        merge_criteria_with_api_options
+        retrieve_categories
+        retrieve_videos
       end
 
       def merge_criteria_with_api_options
@@ -58,23 +60,36 @@ module Yourub
         end
       end
 
+      def retrieve_videos
+        consume_criteria do |criteria|
+          begin
+            @pages.times do |page|
+              req = search_list_request(search_params(criteria))
+              @nextPageToken = req.data.nextPageToken if @pages > 1
+              video_ids = req.data.items.map do |video_item|
+                video_item.id.videoId rescue nil
+              end
+              params = video_params(video_ids.compact.join(","))
+              get_details_and_store(params)
+            end
+          rescue StandardError => e
+            Yourub.logger.error "Error #{e} retrieving videos for the criteria: #{criteria.to_s}"
+          end
+        end
+      end
+
+      def get_details_and_store(params)
+        videos = Yourub::Reader.parse_videos(videos_list_request(params))
+        map_avatars(videos) if @include_avatars
+        add_videos_to_search_results(videos) if videos
+      end
+
       def get_categories_for_country(country)
         param = {"part" => "snippet","regionCode" => country }
         categories_list = video_categories_list_request(param)
         categories_list.data.items.each do |cat_result|
           category_name = parse_name(cat_result["snippet"]["title"])
           @categories.push(cat_result["id"] => category_name)
-        end
-      end
-
-      def retrieve_videos
-        consume_criteria do |criteria|
-          begin
-            req = search_list_request(criteria)
-            get_details_and_store req
-          rescue StandardError => e
-            Yourub.logger.error "Error #{e} retrieving videos for the criteria: #{criteria.to_s}"
-          end
         end
       end
 
@@ -101,19 +116,6 @@ module Yourub
         else
           yield to_consume
         end
-      end
-
-      def get_details_and_store(video_list)
-        video_ids = video_list.data.items.map do |video_item|
-          video_item.id.videoId rescue nil
-        end
-
-        params = video_params(video_ids.compact.join(","))
-        videos = Yourub::Reader.parse_videos(videos_list_request(params))
-
-        map_avatars(videos) if @include_avatars
-
-        add_videos_to_search_results(videos) if videos
       end
 
       def map_avatars(videos)
@@ -148,26 +150,43 @@ module Yourub
         Yourub::REST::Request.new(self, resource_type, method, params)
       end
 
-      def video_params(result_video_ids)
-        fields = URI::encode(
-          "items(id,snippet/description,snippet/title,snippet/publishedAt,snippet/channelId,snippet/channelTitle,snippet/thumbnails,snippet/categoryId,recordingDetails/recordingDate,recordingDetails/location/latitude,recordingDetails/location/longitude,contentDetails/duration)"
-        )
-        { :id => result_video_ids,
-          :part => "id,snippet,recordingDetails,contentDetails",
-          :fields => fields }
+      def search_params(criteria)
+        criteria = criteria.merge(pageToken: @nextPageToken) if @nextPageToken
+        criteria.merge(part: "id,nextPageToken,items")
+        criteria
       end
 
-      def channel_params(result_channel_ids)
+      def video_params(video_ids)
+        { :id => video_ids,
+          :part => "id,snippet,recordingDetails,contentDetails",
+          :fields => default_video_fields }
+      end
+
+      def default_video_fields
+        URI::encode("items(id,snippet/description,snippet/title,snippet/publishedAt,snippet/channelId,snippet/channelTitle,snippet/thumbnails,snippet/categoryId,recordingDetails/recordingDate,recordingDetails/location/latitude,recordingDetails/location/longitude,contentDetails/duration)")
+      end
+
+      def extended_video_params(video_ids)
+        { :id => video_ids,
+          :part => "id,snippet,recordingDetails,contentDetails,statistics",
+          :fields => extended_video_fields }
+      end
+
+      def extended_video_fields
+        URI::encode("items(id,snippet/description,snippet/title,snippet/publishedAt,snippet/channelId,snippet/channelTitle,snippet/thumbnails,snippet/categoryId,recordingDetails/recordingDate,recordingDetails/location/latitude,recordingDetails/location/longitude,contentDetails/duration,statistics/viewCount)")
+      end
+
+      def channel_params(channel_ids)
         fields = URI::encode(
           "items(id,snippet/thumbnails/default/url)"
         )
-        { :id => result_channel_ids,
+        { :id => channel_ids,
           :part => "id,snippet",
           :fields => fields }
       end
 
       def add_videos_to_search_results(entries)
-        entries.each do |entry|
+        entries.flatten.each do |entry|
           @videos.push(entry) if Yourub::CountFilter.accept?(entry)
         end
       end
