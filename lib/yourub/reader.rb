@@ -17,7 +17,7 @@ module Yourub
         {
           id:           video_id(video),
           channel_id:   video['snippet']['channelId'],
-          category_id:  video['snippet']['categoryId']
+          category_id:  video['snippet']['categoryId'],
           published_at: published_at(video),
           title:        video['snippet']['title'],
           description:  description(video),
