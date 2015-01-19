@@ -18,8 +18,10 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency 'google-api-client', '~> 0.7'
-  spec.add_runtime_dependency "thor" , '~> 0.18'
+  spec.add_runtime_dependency "google-api-client", '~> 0.7'
+  spec.add_runtime_dependency "thor", '~> 0.18'
+  spec.add_runtime_dependency "oj", '~> 2.11.2'
+  spec.add_runtime_dependency "geocoder", '~> 1.1.9'
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "byebug", "~> 3.1"
   spec.add_development_dependency "rake", "~> 10.1"

@@ -1,7 +1,8 @@
-require 'json'
+require 'oj'
 require 'logger'
 require 'net/https'
 require 'open-uri'
+require 'geocoder'
 
 require 'yourub/config'
 require 'yourub/client'
@@ -19,3 +20,6 @@ else
   require 'yourub/default'
 end
 
+if defined?(Oj)
+  Oj.default_options = { mode: :compat }
+end

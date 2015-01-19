@@ -7,7 +7,7 @@ module Yourub
                           'HU','IN','IE','IL','IT','JP','JO','MY','MX','MA','NL','NZ','PE','PH',
                           'PL','RU','SA','SG','ZA','KR','ES','SE','CH','TW','AE','US']
       ORDERS          = ['date', 'rating', 'relevance', 'title', 'videoCount', 'viewCount']
-      VALID_PARAMS    = [:country, :category, :query, :id, :max_results, :count_filter, :order ]
+      VALID_PARAMS    = [:country, :category, :query, :id, :max_results, :count_filter, :order, :published_after, :published_before, :location, :latitude, :longitude, :radius ]
       MINIMUM_PARAMS  = [:country, :category, :query, :id]
 
       def confirm(criteria)
@@ -23,6 +23,8 @@ module Yourub
         add_default_country_if_category_is_present
         validate_countries
         set_filter_count_options
+        set_published_options
+        set_location_options
 
         @criteria
       end
@@ -43,7 +45,7 @@ module Yourub
       end
 
       def remove_empty_and_non_valid_params
-        @criteria.keep_if{|k,v| ( (VALID_PARAMS.include? k) && v.size > 0) }
+        @criteria.keep_if{|k,v| ( (VALID_PARAMS.include? k) && v.present?) }
       end
 
       def keep_only_the_id_if_present
@@ -73,6 +75,52 @@ module Yourub
         end
       end
 
+      def set_published_options
+        if @criteria.has_key? :published_before
+          @criteria[:published_before] = @criteria.delete(:published_before).try(:utc).try(:iso8601)
+        end
+        if @criteria.has_key? :published_after
+          @criteria[:published_after] = @criteria.delete(:published_after).try(:utc).try(:iso8601)
+        end
+      end
+
+      def set_location_options
+        if @criteria.has_key? :location
+          latitude, longitude = Geocoder.coordinates(@criteria[:location])
+          @criteria[:location] = "#{latitude},#{longitude}"
+        elsif (@criteria.has_key? :latitude) && (@criteria.has_key :longitude)
+          @criteria[:location] = "#{@criteria.delete([:latitude])},#{@criteria.delete([:longitude])}"
+        else
+          return
+        end
+        set_radius
+      end
+
+      def set_radius
+        if @criteria.has_key? :radius
+          @criteria[:radius] = "#{translate_miles_to_meters(@criteria[:radius].to_f)}m"
+        else
+          @criteria[:radius] = "10000m"
+        end
+      end
+
+      def translate_miles_to_meters(radius)
+        if radius.present? && radius > 0.0
+          @radius_in_meters = radius * 1609.34
+          radius_in_bounds(@radius_in_meters)
+        end
+      end
+
+      def radius_in_bounds(radius)
+        if radius < 1000
+          1000
+        elsif radius > 1000000
+          1000000
+        else
+          radius
+        end
+      end
+
       def valid_category(categories, selected_category)
         return categories if selected_category == 'all'
         categories = categories.select {|k| k.has_value?(selected_category.downcase)}
@@ -89,7 +137,7 @@ module Yourub
         ) unless( criteria.is_a? Hash )
       end
 
-      def minimum_param_present?  
+      def minimum_param_present?
         if @criteria.none?{|k,_| MINIMUM_PARAMS.include? k}
         raise ArgumentError.new(
           "minimum params to start a search is at least one of: #{MINIMUM_PARAMS.join(',')}"
@@ -101,7 +149,7 @@ module Yourub
         if @criteria.has_key? :order
           raise ArgumentError.new(
             "the given order is not in the available ones: #{ORDERS.join(',')}"
-          ) unless( ORDERS.include? @criteria[:order] )    
+          ) unless( ORDERS.include? @criteria[:order] )
         end
       end
 
