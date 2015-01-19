@@ -105,7 +105,6 @@ module Yourub
 
       def get_details_and_store(video_list)
         video_ids = video_list.data.items.map do |video_item|
-          puts video_item.inspect
           video_item.id.videoId rescue nil
         end
 
@@ -123,7 +122,7 @@ module Yourub
         channel_ids = videos.map { |vid| vid[:channel_id] }.uniq
         params = channel_params(channel_ids.compact.join(","))
         channels = Yourub::Reader.parse_channels(channels_list_request(params))
-        channels.each { |channel| avatar_map[ channel["id"] ] = channel["snippet"]["thumbnails"]["default"]["url"] }
+        channels.each { |channel| avatar_map[ channel['id'] ] = channel['snippet']['thumbnails']['default']['url'] }
 
         videos.each { |video| video[:avatar] = avatar_map[ video[:channel_id] ] }
       end
@@ -151,7 +150,7 @@ module Yourub
 
       def video_params(result_video_ids)
         fields = URI::encode(
-          "items(id,snippet/description,snippet/title,snippet/publishedAt,snippet/channelId,snippet/channelTitle,snippet/thumbnails,recordingDetails/recordingDate,recordingDetails/location/latitude,recordingDetails/location/longitude)"
+          "items(id,snippet/description,snippet/title,snippet/publishedAt,snippet/channelId,snippet/channelTitle,snippet/thumbnails,snippet/categoryId,recordingDetails/recordingDate,recordingDetails/location/latitude,recordingDetails/location/longitude)"
         )
         { :id => result_video_ids,
           :part => "id,snippet,recordingDetails",

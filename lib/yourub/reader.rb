@@ -17,13 +17,14 @@ module Yourub
         {
           id:           video_id(video),
           channel_id:   video['snippet']['channelId'],
+          category_id:  video['snippet']['categoryId']
           published_at: published_at(video),
           title:        video['snippet']['title'],
           description:  description(video),
           thumbnail:    highest_res_thumbnail(video),
           url:          "https://www.youtube.com/watch?v=#{video_id(video)}",
           latitude:     latitude(video),
-          longitude:    longitude(video),
+          longitude:    longitude(video)
         }
       end
 
@@ -35,7 +36,7 @@ module Yourub
       end
 
       def published_at(video)
-        video["snippet"]["publishedAt"] || video["recording_details"]["recordingDate"]
+        video['snippet']['publishedAt'] || video['recording_details']['recordingDate']
       rescue => e
         puts "#{__method__}"
         puts "#{e.class}: #{e.message}"
@@ -51,7 +52,7 @@ module Yourub
       def highest_res_thumbnail(video)
         thumbs = video['snippet']['thumbnails']
         %w(maxres standard high medium default).each do |size|
-          break thumbs[size]["url"] if thumbs[size] && thumbs[size]["url"].present?
+          break thumbs[size]['url'] if thumbs[size] && thumbs[size]['url'].present?
         end
       rescue => e
         puts "#{__method__}"
