@@ -65,7 +65,10 @@ module Yourub
           begin
             @pages.times do |page|
               req = search_list_request(search_params(criteria))
-              @nextPageToken = req.data.nextPageToken if @pages > 1
+              if @pages > 1
+                @nextPageToken = req.data.nextPageToken
+                sleep 0.2
+              end
               video_ids = req.data.items.map do |video_item|
                 video_item.id.videoId rescue nil
               end
