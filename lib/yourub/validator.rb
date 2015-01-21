@@ -7,8 +7,8 @@ module Yourub
                           'HU','IN','IE','IL','IT','JP','JO','MY','MX','MA','NL','NZ','PE','PH',
                           'PL','RU','SA','SG','ZA','KR','ES','SE','CH','TW','AE','US']
       ORDERS          = ['date', 'rating', 'relevance', 'title', 'videoCount', 'viewCount']
-      VALID_PARAMS    = [:country, :category, :query, :id, :max_results, :count_filter, :order, :published_after, :published_before, :location, :latitude, :longitude, :radius ]
-      MINIMUM_PARAMS  = [:country, :category, :query, :id]
+      VALID_PARAMS    = [:country, :category, :query, :id, :playlist_id, :max_results, :count_filter, :order, :published_after, :published_before, :location, :latitude, :longitude, :radius ]
+      MINIMUM_PARAMS  = [:country, :category, :query, :id, :playlist_id]
 
       def confirm(criteria)
         valid_format?(criteria)
