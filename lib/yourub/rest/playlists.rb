@@ -47,7 +47,7 @@ module Yourub
             @pages.times do |page|
               req = playlist_items_list_request(playlist_params(criteria))
               if @pages > 1
-                @nextPageToken = req.data.nextPageToken
+                @nextPageToken = req.data.nextPageToken rescue nil
                 sleep 0.2
               end
               video_ids = req.data.items.map do |playlist_item|
@@ -92,13 +92,7 @@ module Yourub
       end
 
       def playlist_params(criteria)
-        criteria = criteria.merge(pageToken: @nextPageToken) if @nextPageToken
-        criteria = criteria.merge(part: "id,snippet,contentDetails", fields: default_playlist_fields)
-        criteria
-      end
-
-      def default_playlist_fields
-        URI::encode("nextPageToken,items(contentDetails/videoId)")
+        @nextPageToken ? criteria.merge(pageToken: @nextPageToken) : criteria
       end
 
       def video_params(video_ids)
